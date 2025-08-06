@@ -1,0 +1,205 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "name": "Unified AI Agent Platform - Webhooks",
+    "description": "A collection for testing the webhook API endpoints of the Unified AI Agent Platform.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Get All Webhooks",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/webhooks",
+          "host": ["{{baseUrl}}"],
+          "path": ["webhooks"]
+        },
+        "description": "Retrieve all webhooks for the authenticated user."
+      },
+      "response": []
+    },
+    {
+      "name": "Create Webhook",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Workflow Completion Notifier\",\n  \"description\": \"Sends notifications when workflows complete\",\n  \"targetUrl\": \"https://webhook.site/your-webhook-id\",\n  \"events\": [\"workflow.completed\", \"agent.completed\"],\n  \"isActive\": true,\n  \"headers\": {\n    \"X-Custom-Header\": \"custom-value\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/webhooks",
+          "host": ["{{baseUrl}}"],
+          "path": ["webhooks"]
+        },
+        "description": "Create a new webhook."
+      },
+      "response": []
+    },
+    {
+      "name": "Get Webhook",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/webhooks/{{webhookId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["webhooks", "{{webhookId}}"]
+        },
+        "description": "Retrieve a specific webhook by ID."
+      },
+      "response": []
+    },
+    {
+      "name": "Update Webhook",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Updated Webhook Name\",\n  \"description\": \"Updated description\",\n  \"targetUrl\": \"https://webhook.site/your-updated-webhook-id\",\n  \"events\": [\"workflow.completed\", \"workflow.failed\"],\n  \"isActive\": true,\n  \"headers\": {\n    \"X-Custom-Header\": \"updated-value\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/webhooks/{{webhookId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["webhooks", "{{webhookId}}"]
+        },
+        "description": "Update a specific webhook by ID."
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Webhook",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/webhooks/{{webhookId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["webhooks", "{{webhookId}}"]
+        },
+        "description": "Delete a specific webhook by ID."
+      },
+      "response": []
+    },
+    {
+      "name": "Test Webhook",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/webhooks/{{webhookId}}/test",
+          "host": ["{{baseUrl}}"],
+          "path": ["webhooks", "{{webhookId}}", "test"]
+        },
+        "description": "Test a webhook by sending a test event."
+      },
+      "response": []
+    },
+    {
+      "name": "Receive Webhook",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"event\": \"custom.event\",\n  \"data\": {\n    \"key\": \"value\",\n    \"timestamp\": \"2023-06-15T12:30:45Z\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/webhooks/receive",
+          "host": ["{{baseUrl}}"],
+          "path": ["webhooks", "receive"]
+        },
+        "description": "Endpoint for receiving webhooks from external services like Pipedream."
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "YOUR_API_TOKEN",
+      "type": "string"
+    },
+    {
+      "key": "webhookId",
+      "value": "WEBHOOK_ID",
+      "type": "string"
+    }
+  ]
+}

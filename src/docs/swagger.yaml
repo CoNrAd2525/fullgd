@@ -1,0 +1,393 @@
+openapi: 3.0.0
+info:
+  title: Unified AI Agent Platform API
+  description: API documentation for the Unified AI Agent Platform
+  version: 1.0.0
+
+servers:
+  - url: /api/v1
+    description: API version 1
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        status:
+          type: integer
+          example: 400
+        message:
+          type: string
+          example: Bad request
+    Webhook:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174000
+        name:
+          type: string
+          example: Workflow Completion Notifier
+        description:
+          type: string
+          example: Sends notifications when workflows complete
+        targetUrl:
+          type: string
+          format: uri
+          example: https://example.com/webhook
+        secret:
+          type: string
+          example: 5f2b5cdbe5194f10b3241568fe4e2b22
+        events:
+          type: array
+          items:
+            type: string
+            enum:
+              - workflow.completed
+              - workflow.failed
+              - workflow.stopped
+              - agent.completed
+              - agent.failed
+              - agent.stopped
+          example: ["workflow.completed", "agent.completed"]
+        isActive:
+          type: boolean
+          example: true
+        headers:
+          type: object
+          additionalProperties:
+            type: string
+          example:
+            X-Custom-Header: custom-value
+        createdAt:
+          type: string
+          format: date-time
+          example: 2023-01-01T00:00:00Z
+        updatedAt:
+          type: string
+          format: date-time
+          example: 2023-01-02T00:00:00Z
+    WebhookCreate:
+      type: object
+      required:
+        - name
+        - targetUrl
+        - events
+      properties:
+        name:
+          type: string
+          example: Workflow Completion Notifier
+        description:
+          type: string
+          example: Sends notifications when workflows complete
+        targetUrl:
+          type: string
+          format: uri
+          example: https://example.com/webhook
+        events:
+          type: array
+          items:
+            type: string
+            enum:
+              - workflow.completed
+              - workflow.failed
+              - workflow.stopped
+              - agent.completed
+              - agent.failed
+              - agent.stopped
+          example: ["workflow.completed", "agent.completed"]
+        isActive:
+          type: boolean
+          example: true
+        headers:
+          type: object
+          additionalProperties:
+            type: string
+          example:
+            X-Custom-Header: custom-value
+    WebhookUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Updated Webhook Name
+        description:
+          type: string
+          example: Updated description
+        targetUrl:
+          type: string
+          format: uri
+          example: https://example.com/updated-webhook
+        events:
+          type: array
+          items:
+            type: string
+            enum:
+              - workflow.completed
+              - workflow.failed
+              - workflow.stopped
+              - agent.completed
+              - agent.failed
+              - agent.stopped
+          example: ["workflow.completed", "workflow.failed"]
+        isActive:
+          type: boolean
+          example: true
+        headers:
+          type: object
+          additionalProperties:
+            type: string
+          example:
+            X-Custom-Header: updated-value
+    WebhookTestResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Webhook test successful
+        statusCode:
+          type: integer
+          example: 200
+        response:
+          type: object
+          example:
+            status: received
+            message: Webhook received successfully
+
+paths:
+  /webhooks:
+    get:
+      summary: Get all webhooks
+      description: Retrieve all webhooks for the authenticated user
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: A list of webhooks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Webhook'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      summary: Create a webhook
+      description: Create a new webhook
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookCreate'
+      responses:
+        '201':
+          description: Webhook created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Webhook'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /webhooks/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: Webhook ID
+    get:
+      summary: Get a webhook
+      description: Retrieve a specific webhook by ID
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Webhook details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Webhook'
+        '404':
+          description: Webhook not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      summary: Update a webhook
+      description: Update a specific webhook by ID
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookUpdate'
+      responses:
+        '200':
+          description: Webhook updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Webhook'
+        '404':
+          description: Webhook not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      summary: Delete a webhook
+      description: Delete a specific webhook by ID
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Webhook deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Webhook deleted successfully
+        '404':
+          description: Webhook not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /webhooks/{id}/test:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: Webhook ID
+    post:
+      summary: Test a webhook
+      description: Send a test event to the webhook
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Webhook test results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookTestResponse'
+        '404':
+          description: Webhook not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /webhooks/receive:
+    post:
+      summary: Receive webhook
+      description: Endpoint for receiving webhooks from external services like Pipedream
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Webhook received successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Webhook received successfully

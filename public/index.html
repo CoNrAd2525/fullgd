@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent-Flow-AI - Multi-Agent Orchestrator</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800">Agent-Flow-AI</h1>
+                    <p class="text-gray-600 mt-2">Multi-Agent Orchestration Platform</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div id="status-indicator" class="flex items-center">
+                        <div class="w-3 h-3 bg-gray-400 rounded-full mr-2"></div>
+                        <span class="text-sm text-gray-600">Disconnected</span>
+                    </div>
+                    <button id="auth-btn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fab fa-github mr-2"></i>Login with GitHub
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <div class="bg-white rounded-lg shadow-md mb-8">
+            <nav class="flex border-b">
+                <button class="tab-btn active px-6 py-4 text-blue-600 border-b-2 border-blue-600" data-tab="create">
+                    <i class="fas fa-plus mr-2"></i>Create Agents
+                </button>
+                <button class="tab-btn px-6 py-4 text-gray-600 hover:text-blue-600" data-tab="orchestrate">
+                    <i class="fas fa-network-wired mr-2"></i>Orchestrate
+                </button>
+                <button class="tab-btn px-6 py-4 text-gray-600 hover:text-blue-600" data-tab="monitor">
+                    <i class="fas fa-chart-line mr-2"></i>Monitor
+                </button>
+                <button class="tab-btn px-6 py-4 text-gray-600 hover:text-blue-600" data-tab="templates">
+                    <i class="fas fa-file-code mr-2"></i>Templates
+                </button>
+            </nav>
+        </div>
+
+        <!-- Create Agents Tab -->
+        <div id="create-tab" class="tab-content">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Agent Creation Form -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-semibold mb-4">Create New Agent</h2>
+                    <form id="agent-form">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Framework</label>
+                            <select id="framework-select" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="">Select Framework</option>
+                                <option value="HyperAgent">HyperAgent - Full Software Lifecycle</option>
+                                <option value="Activepieces">Activepieces - Workflow Automation</option>
+                                <option value="CAI">Cybersecurity AI - Security Testing</option>
+                                <option value="SmolAgents">SmolAgents - Lightweight Processing</option>
+                                <option value="Agno">Agno - Workflow Builder</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Agent Name</label>
+                            <input type="text" id="agent-name" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter agent name">
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Environment</label>
+                            <select id="environment-select" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="Production">Production</option>
+                                <option value="Development">Development</option>
+                                <option value="Testing">Testing</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Permissions</label>
+                            <select id="permissions-select" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="admin">Admin</option>
+                                <option value="user">User</option>
+                                <option value="readonly">Read Only</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Configuration (JSON)</label>
+                            <textarea id="agent-config" rows="8" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm" placeholder="Enter agent configuration in JSON format"></textarea>
+                        </div>
+                        
+                        <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 px-4 rounded-lg transition-colors">
+                            <i class="fas fa-plus mr-2"></i>Create Agent
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- Quick Templates -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h2 class="text-xl font-semibold mb-4">Quick Start Templates</h2>
+                    <div class="space-y-4">
+                        <div class="template-card border border-gray-200 rounded-lg p-4 hover:border-blue-300 cursor-pointer transition-colors" data-framework="HyperAgent">
+                            <h3 class="font-semibold text-gray-800">HyperAgent Orchestrator</h3>
+                            <p class="text-sm text-gray-600 mt-1">Central orchestrator for collaborative workflows</p>
+                            <div class="flex items-center mt-2">
+                                <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">Production</span>
+                                <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded ml-2">Admin</span>
+                            </div>
+                        </div>
+                        
+                        <div class="template-card border border-gray-200 rounded-lg p-4 hover:border-blue-300 cursor-pointer transition-colors" data-framework="Activepieces">
+                            <h3 class="font-semibold text-gray-800">Workflow Automation</h3>
+                            <p class="text-sm text-gray-600 mt-1">Scalable workflow automation with 280+ integrations</p>
+                            <div class="flex items-center mt-2">
+                                <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">Production</span>
+                                <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded ml-2">User</span>
+                            </div>
+                        </div>
+                        
+                        <div class="template-card border border-gray-200 rounded-lg p-4 hover:border-blue-300 cursor-pointer transition-colors" data-framework="CAI">
+                            <h3 class="font-semibold text-gray-800">Security Scanner</h3>
+                            <p class="text-sm text-gray-600 mt-1">AI-driven penetration testing and vulnerability discovery</p>
+                            <div class="flex items-center mt-2">
+                                <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">Production</span>
+                                <span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded ml-2">Security</span>
+                            </div>
+                        </div>
+                        
+                        <div class="template-card border border-gray-200 rounded-lg p-4 hover:border-blue-300 cursor-pointer transition-colors" data-framework="SmolAgents">
+                            <h3 class="font-semibold text-gray-800">Data Processor</h3>
+                            <p class="text-sm text-gray-600 mt-1">Lightweight Python-based real-time processing</p>
+                            <div class="flex items-center mt-2">
+                                <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Development</span>
+                                <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded ml-2">User</span>
+                            </div>
+                        </div>
+                        
+                        <div class="template-card border border-gray-200 rounded-lg p-4 hover:border-blue-300 cursor-pointer transition-colors" data-framework="Agno">
+                            <h3 class="font-semibold text-gray-800">Workflow Builder</h3>
+                            <p class="text-sm text-gray-600 mt-1">Developer-friendly workflow automation and agent building</p>
+                            <div class="flex items-center mt-2">
+                                <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">Production</span>
+                                <span class="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded ml-2">Builder</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Orchestrate Tab -->
+        <div id="orchestrate-tab" class="tab-content hidden">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold mb-4">Multi-Agent Orchestration</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="text-lg font-medium mb-4">Create Complete System</h3>
+                        <p class="text-gray-600 mb-4">Deploy all five agents with predefined configurations and orchestration flow.</p>
+                        <button id="create-system-btn" class="bg-green-500 hover:bg-green-600 text-white py-3 px-6 rounded-lg transition-colors">
+                            <i class="fas fa-rocket mr-2"></i>Deploy AgentFlow System
+                        </button>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-medium mb-4">System Status</h3>
+                        <div id="system-status" class="space-y-2">
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+                                <span>HyperAgent</span>
+                                <span class="text-gray-500">Not Deployed</span>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+                                <span>Activepieces</span>
+                                <span class="text-gray-500">Not Deployed</span>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+                                <span>Cybersecurity AI</span>
+                                <span class="text-gray-500">Not Deployed</span>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+                                <span>SmolAgents</span>
+                                <span class="text-gray-500">Not Deployed</span>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+                                <span>Agno</span>
+                                <span class="text-gray-500">Not Deployed</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monitor Tab -->
+        <div id="monitor-tab" class="tab-content hidden">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold mb-4">Agent Monitoring</h2>
+                <div id="agent-list" class="space-y-4">
+                    <p class="text-gray-500 text-center py-8">No agents deployed yet. Create some agents to see them here.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Templates Tab -->
+        <div id="templates-tab" class="tab-content hidden">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold mb-4">Framework Templates</h2>
+                <div id="framework-templates" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Templates will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Modal -->
+    <div id="loading-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 max-w-sm mx-4">
+            <div class="flex items-center">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mr-3"></div>
+                <span class="text-gray-700">Processing...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success/Error Messages -->
+    <div id="message-container" class="fixed top-4 right-4 z-50"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>

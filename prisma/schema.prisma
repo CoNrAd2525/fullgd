@@ -1,0 +1,513 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model
+model User {
+  id             String    @id @default(uuid())
+  email          String    @unique
+  password       String
+  name           String?
+  role           String    @default("user") // user, admin
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  lastLoginAt    DateTime?
+  profilePicture String?
+  settings       Json?     @default("{}") // User preferences
+
+  // Relations
+  agents         Agent[]         @relation("UserAgents")
+  workflows      Workflow[]      @relation("UserWorkflows")
+  knowledgeBases KnowledgeBase[] @relation("UserKnowledgeBases")
+  tools          Tool[]          @relation("UserTools")
+  apiKeys        ApiKey[]        @relation("UserApiKeys")
+  activities     Activity[]      @relation("UserActivities")
+  webhooks       Webhook[]       @relation("UserWebhooks")
+  
+  // Multi-agent collaboration relations
+  collaborationSessions CollaborationSession[] @relation("UserCollaborationSessions")
+  rejectedApprovals ApprovalGate[] @relation("RejectedApprovals")
+
+  @@map("users")
+}
+
+// API Key model
+model ApiKey {
+  id        String   @id @default(uuid())
+  name      String
+  key       String   @unique
+  isActive  Boolean  @default(true)
+  expiresAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  lastUsed  DateTime?
+
+  // Relations
+  userId    String
+  user      User     @relation("UserApiKeys", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("api_keys")
+}
+
+// Agent model
+model Agent {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  type        String   // llm, function, human, etc.
+  config      Json     // Agent configuration
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  userId      String
+  user        User     @relation("UserAgents", fields: [userId], references: [id], onDelete: Cascade)
+  workflows   WorkflowAgent[] @relation("WorkflowAgents")
+  executions  AgentExecution[] @relation("AgentExecutions")
+  memories    Memory[] @relation("AgentMemories")
+  knowledgeBases AgentKnowledgeBase[] @relation("AgentKnowledgeBases")
+  tools       AgentTool[] @relation("AgentTools")
+  
+  // Multi-agent collaboration relations
+  roles       AgentRole[] @relation("AgentRoles")
+  participations SessionParticipant[] @relation("AgentParticipations")
+  sentMessages AgentMessage[] @relation("SentMessages")
+  receivedMessages AgentMessage[] @relation("ReceivedMessages")
+  assignedTasks TaskAssignment[] @relation("AssignedTasks")
+  receivedTasks TaskAssignment[] @relation("ReceivedTasks")
+  requestedApprovals ApprovalGate[] @relation("RequestedApprovals")
+  capabilityAssignments AgentCapabilityAssignment[] @relation("AgentCapabilityAssignments")
+
+  @@map("agents")
+}
+
+// Workflow model
+model Workflow {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  config      Json     // Workflow configuration
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  userId      String
+  user        User     @relation("UserWorkflows", fields: [userId], references: [id], onDelete: Cascade)
+  agents      WorkflowAgent[] @relation("WorkflowAgents")
+  executions  WorkflowExecution[] @relation("WorkflowExecutions")
+
+  @@map("workflows")
+}
+
+// WorkflowAgent model (join table)
+model WorkflowAgent {
+  id          String   @id @default(uuid())
+  position    Int      // Position in the workflow
+  config      Json?    // Agent-specific configuration in this workflow
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  workflowId  String
+  workflow    Workflow @relation("WorkflowAgents", fields: [workflowId], references: [id], onDelete: Cascade)
+  agentId     String
+  agent       Agent    @relation("WorkflowAgents", fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@unique([workflowId, agentId])
+  @@map("workflow_agents")
+}
+
+// Agent Execution model
+model AgentExecution {
+  id          String   @id @default(uuid())
+  status      String   // pending, running, completed, failed
+  input       Json?
+  output      Json?
+  error       String?
+  startedAt   DateTime?
+  completedAt DateTime?
+  duration    Int?     // Duration in milliseconds
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  agentId     String
+  agent       Agent    @relation("AgentExecutions", fields: [agentId], references: [id], onDelete: Cascade)
+  workflowExecutionId String?
+  workflowExecution   WorkflowExecution? @relation("WorkflowAgentExecutions", fields: [workflowExecutionId], references: [id])
+
+  @@map("agent_executions")
+}
+
+// Workflow Execution model
+model WorkflowExecution {
+  id          String   @id @default(uuid())
+  status      String   // pending, running, completed, failed
+  input       Json?
+  output      Json?
+  error       String?
+  progress    Float?   @default(0) // Progress percentage
+  startedAt   DateTime?
+  completedAt DateTime?
+  duration    Int?     // Duration in milliseconds
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  workflowId  String
+  workflow    Workflow @relation("WorkflowExecutions", fields: [workflowId], references: [id], onDelete: Cascade)
+  agentExecutions AgentExecution[] @relation("WorkflowAgentExecutions")
+
+  @@map("workflow_executions")
+}
+
+// Memory model
+model Memory {
+  id          String   @id @default(uuid())
+  content     String   @db.Text
+  metadata    Json?    // Additional metadata
+  embedding   Float[]  // Vector embedding
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  agentId     String
+  agent       Agent    @relation("AgentMemories", fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@map("memories")
+}
+
+// Knowledge Base model
+model KnowledgeBase {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  type        String   // vector, graph, etc.
+  config      Json?    // Knowledge base configuration
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  userId      String
+  user        User     @relation("UserKnowledgeBases", fields: [userId], references: [id], onDelete: Cascade)
+  documents   Document[] @relation("KnowledgeBaseDocuments")
+  agents      AgentKnowledgeBase[] @relation("AgentKnowledgeBases")
+
+  @@map("knowledge_bases")
+}
+
+// Document model
+model Document {
+  id          String   @id @default(uuid())
+  name        String
+  content     String   @db.Text
+  mimeType    String
+  metadata    Json?
+  embedding   Float[] // Vector embedding
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  knowledgeBaseId String
+  knowledgeBase   KnowledgeBase @relation("KnowledgeBaseDocuments", fields: [knowledgeBaseId], references: [id], onDelete: Cascade)
+
+  @@map("documents")
+}
+
+// AgentKnowledgeBase model (join table)
+model AgentKnowledgeBase {
+  id          String   @id @default(uuid())
+  createdAt   DateTime @default(now())
+
+  // Relations
+  agentId     String
+  agent       Agent    @relation("AgentKnowledgeBases", fields: [agentId], references: [id], onDelete: Cascade)
+  knowledgeBaseId String
+  knowledgeBase   KnowledgeBase @relation("AgentKnowledgeBases", fields: [knowledgeBaseId], references: [id], onDelete: Cascade)
+
+  @@unique([agentId, knowledgeBaseId])
+  @@map("agent_knowledge_bases")
+}
+
+// Tool model
+model Tool {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  type        String   // api, function, etc.
+  config      Json     // Tool configuration
+  schema      Json?    // Tool schema
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  userId      String
+  user        User     @relation("UserTools", fields: [userId], references: [id], onDelete: Cascade)
+  agents      AgentTool[] @relation("AgentTools")
+
+  @@map("tools")
+}
+
+// AgentTool model (join table)
+model AgentTool {
+  id          String   @id @default(uuid())
+  config      Json?    // Tool-specific configuration for this agent
+  createdAt   DateTime @default(now())
+
+  // Relations
+  agentId     String
+  agent       Agent    @relation("AgentTools", fields: [agentId], references: [id], onDelete: Cascade)
+  toolId      String
+  tool        Tool     @relation("AgentTools", fields: [toolId], references: [id], onDelete: Cascade)
+
+  @@unique([agentId, toolId])
+  @@map("agent_tools")
+}
+
+// Activity model
+model Activity {
+  id          String   @id @default(uuid())
+  type        String   // login, agent_creation, workflow_execution, etc.
+  details     Json?
+  createdAt   DateTime @default(now())
+
+  // Relations
+  userId      String
+  user        User     @relation("UserActivities", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("activities")
+}
+
+// Webhook model
+model Webhook {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  targetUrl   String
+  secret      String
+  events      String[] // Array of event types to trigger this webhook
+  isActive    Boolean  @default(true)
+  headers     Json?    // Custom headers to include in webhook requests
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  userId      String
+  user        User     @relation("UserWebhooks", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("webhooks")
+}
+
+// Multi-Agent Collaboration Models
+
+// Agent Roles and Capabilities
+model AgentRole {
+  id                    String   @id @default(uuid())
+  roleType              String   // supervisor, worker, specialist
+  capabilities          Json     @default("{}")
+  priority              Int      @default(0)
+  maxConcurrentTasks    Int      @default(1)
+  specializations       String[]
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  // Relations
+  agentId               String
+  agent                 Agent    @relation("AgentRoles", fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@map("agent_roles")
+}
+
+// Collaboration Sessions
+model CollaborationSession {
+  id                    String   @id @default(uuid())
+  name                  String
+  description           String?
+  status                String   @default("pending") // pending, active, paused, completed, failed
+  sessionType           String   @default("collaborative") // collaborative, hierarchical, pipeline
+  sharedState           Json     @default("{}")
+  config                Json     @default("{}")
+  maxParticipants       Int      @default(10)
+  timeoutMinutes        Int      @default(60)
+  startedAt             DateTime?
+  completedAt           DateTime?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  // Relations
+  createdBy             String
+  user                  User     @relation("UserCollaborationSessions", fields: [createdBy], references: [id], onDelete: Cascade)
+  participants          SessionParticipant[] @relation("SessionParticipants")
+  messages              AgentMessage[] @relation("SessionMessages")
+  taskAssignments       TaskAssignment[] @relation("SessionTasks")
+  approvalGates         ApprovalGate[] @relation("SessionApprovals")
+  events                CollaborationEvent[] @relation("SessionEvents")
+
+  @@map("collaboration_sessions")
+}
+
+// Session Participants
+model SessionParticipant {
+  id                    String   @id @default(uuid())
+  role                  String   // supervisor, worker, specialist, observer
+  status                String   @default("active") // active, busy, idle, disconnected
+  capabilities          Json     @default("{}")
+  assignedTasks         Json     @default("[]")
+  performanceMetrics    Json     @default("{}")
+  joinedAt              DateTime @default(now())
+  lastActiveAt          DateTime @default(now())
+
+  // Relations
+  sessionId             String
+  session               CollaborationSession @relation("SessionParticipants", fields: [sessionId], references: [id], onDelete: Cascade)
+  agentId               String
+  agent                 Agent    @relation("AgentParticipations", fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, agentId])
+  @@map("session_participants")
+}
+
+// Agent Messages
+model AgentMessage {
+  id                    String   @id @default(uuid())
+  messageType           String   // task, response, notification, error, broadcast, delegation
+  content               Json
+  priority              Int      @default(0)
+  requiresResponse      Boolean  @default(false)
+  readAt                DateTime?
+  respondedAt           DateTime?
+  createdAt             DateTime @default(now())
+
+  // Relations
+  sessionId             String
+  session               CollaborationSession @relation("SessionMessages", fields: [sessionId], references: [id], onDelete: Cascade)
+  fromAgentId           String?
+  fromAgent             Agent?   @relation("SentMessages", fields: [fromAgentId], references: [id], onDelete: SetNull)
+  toAgentId             String?
+  toAgent               Agent?   @relation("ReceivedMessages", fields: [toAgentId], references: [id], onDelete: SetNull)
+  parentMessageId       String?
+  parentMessage         AgentMessage? @relation("MessageThread", fields: [parentMessageId], references: [id])
+  replies               AgentMessage[] @relation("MessageThread")
+
+  @@map("agent_messages")
+}
+
+// Task Assignments
+model TaskAssignment {
+  id                    String   @id @default(uuid())
+  taskType              String
+  taskDescription       String
+  taskData              Json     @default("{}")
+  requirements          Json     @default("{}")
+  priority              Int      @default(0)
+  status                String   @default("pending") // pending, accepted, in_progress, completed, failed, rejected
+  progress              Int      @default(0)
+  result                Json?
+  errorMessage          String?
+  estimatedDuration     Int?     // in minutes
+  actualDuration        Int?     // in minutes
+  assignedAt            DateTime @default(now())
+  startedAt             DateTime?
+  completedAt           DateTime?
+  deadline              DateTime?
+
+  // Relations
+  sessionId             String
+  session               CollaborationSession @relation("SessionTasks", fields: [sessionId], references: [id], onDelete: Cascade)
+  assignedBy            String?
+  assignerAgent         Agent?   @relation("AssignedTasks", fields: [assignedBy], references: [id], onDelete: SetNull)
+  assignedTo            String
+  assigneeAgent         Agent    @relation("ReceivedTasks", fields: [assignedTo], references: [id], onDelete: Cascade)
+
+  @@map("task_assignments")
+}
+
+// Human Approval Gates
+model ApprovalGate {
+  id                    String   @id @default(uuid())
+  title                 String
+  description           String?
+  approvalType          String   @default("manual") // manual, automatic, conditional
+  status                String   @default("pending") // pending, approved, rejected, expired
+  requiredApprovers     Int      @default(1)
+  currentApprovers      Int      @default(0)
+  approvalData          Json     @default("{}")
+  approvalCriteria      Json     @default("{}")
+  approvedBy            String[]
+  rejectionReason       String?
+  expiresAt             DateTime?
+  createdAt             DateTime @default(now())
+  resolvedAt            DateTime?
+
+  // Relations
+  sessionId             String
+  session               CollaborationSession @relation("SessionApprovals", fields: [sessionId], references: [id], onDelete: Cascade)
+  requestedBy           String?
+  requesterAgent        Agent?   @relation("RequestedApprovals", fields: [requestedBy], references: [id], onDelete: SetNull)
+  rejectedBy            String?
+  rejectorUser          User?    @relation("RejectedApprovals", fields: [rejectedBy], references: [id], onDelete: SetNull)
+
+  @@map("approval_gates")
+}
+
+// Collaboration Events
+model CollaborationEvent {
+  id                    String   @id @default(uuid())
+  eventType             String   // session_started, agent_joined, task_assigned, message_sent, etc.
+  actorType             String   // agent, user, system
+  actorId               String?
+  targetType            String?
+  targetId              String?
+  eventData             Json     @default("{}")
+  createdAt             DateTime @default(now())
+
+  // Relations
+  sessionId             String
+  session               CollaborationSession @relation("SessionEvents", fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@map("collaboration_events")
+}
+
+// Agent Capabilities
+model AgentCapability {
+  id                    String   @id @default(uuid())
+  name                  String   @unique
+  description           String?
+  category              String?  // analysis, generation, integration, communication, etc.
+  requirements          Json     @default("{}")
+  createdAt             DateTime @default(now())
+
+  // Relations
+  assignments           AgentCapabilityAssignment[] @relation("CapabilityAssignments")
+
+  @@map("agent_capabilities")
+}
+
+// Agent Capability Assignments
+model AgentCapabilityAssignment {
+  id                    String   @id @default(uuid())
+  proficiencyLevel      Int      @default(1) // 1-10 scale
+  verified              Boolean  @default(false)
+  assignedAt            DateTime @default(now())
+
+  // Relations
+  agentId               String
+  agent                 Agent    @relation("AgentCapabilityAssignments", fields: [agentId], references: [id], onDelete: Cascade)
+  capabilityId          String
+  capability            AgentCapability @relation("CapabilityAssignments", fields: [capabilityId], references: [id], onDelete: Cascade)
+
+  @@unique([agentId, capabilityId])
+  @@map("agent_capability_assignments")
+}
