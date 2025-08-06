@@ -1,0 +1,8 @@
+model Tool {
+  id        String   @id @default(uuid())
+  name      String
+  type      String
+  category  String?    // Add this if missing
+  lastUsed  DateTime?  // Add this if missing
+  // ... other fields
+}

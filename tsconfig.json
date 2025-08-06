@@ -1,6 +1,9 @@
 {
   "compilerOptions": {
+    // ...other options...
     "skipLibCheck": true,
-    "strict": false
+    "strict": false,
+    "typeRoots": ["./src/types", "./node_modules/@types"],
+    "types": ["node", "express"]
   }
 }
