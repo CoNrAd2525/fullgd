@@ -1,0 +1,1 @@
+npm install -D @types/bcryptjs @types/express-validator
