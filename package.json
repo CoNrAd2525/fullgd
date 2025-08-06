@@ -1,3 +1,7 @@
+"scripts": {
+-  "build": "tsc"
++  "build": "node node_modules/typescript/bin/tsc"
+}
 {
   "name": "unified-ai-agent-platform",
   "version": "1.0.0",
