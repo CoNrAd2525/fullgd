@@ -70,3 +70,13 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+// Metrics endpoint
+app.get('/metrics', (req, res) => {
+  res.json({
+    memory: process.memoryUsage(),
+    uptime: process.uptime(),
+    version: process.version,
+    platform: process.platform
+  });
+});
